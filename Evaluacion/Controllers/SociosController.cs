@@ -1,8 +1,10 @@
 ﻿using Evaluacion.Data;
+using Evaluacion.Models;
 using Evaluacion.ViewModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,9 +35,14 @@ namespace Evaluacion.Controllers
         }
 
         // GET: SocioController/Details/5
-        public ActionResult Details(int id)
+        public ActionResult Details(string id)
         {
-            return View();
+            if (string.IsNullOrEmpty(id)  )
+                return RedirectToAction("Index");
+            Socio socio = _applicationDbContext.Socios.Where(q => q.Cedula == id).FirstOrDefault();
+            if (socio == null)
+                return RedirectToAction("Index");
+            return View(socio);
         }
 
         // GET: SocioController/Create
@@ -48,58 +55,106 @@ namespace Evaluacion.Controllers
         // POST: SocioController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(Socio socio)
         {
             try
-            {
-                return RedirectToAction(nameof(Index));
+            {               
+                _applicationDbContext.Add(socio);
+                _applicationDbContext.SaveChanges();
             }
-            catch
+            catch (Exception exc)
             {
-                return View();
+
+                return View(socio);
+
             }
+            return RedirectToAction("Index");
+
+
         }
 
         // GET: SocioController/Edit/5
-        public ActionResult Edit(int id)
+        public ActionResult Edit(string id )
         {
-            return View();
+            if (string.IsNullOrEmpty(id))
+                return RedirectToAction("Index");
+            Socio socio = _applicationDbContext.Socios.Where(q => q.Cedula == id).FirstOrDefault();
+            if (socio == null)
+                return RedirectToAction("Index");
+            return View(socio);
+
+
         }
 
         // POST: SocioController/Edit/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        
+        public ActionResult Edit(string id, Socio socio )
         {
+            if (id != socio.Cedula)
+                return RedirectToAction("Index");
             try
-            {
-                return RedirectToAction(nameof(Index));
+            {              
+                _applicationDbContext.Update(socio);
+                _applicationDbContext.SaveChanges();
             }
-            catch
+            catch (Exception exc)
             {
-                return View();
+                _applicationDbContext.Socios.Where(q => q.Cedula == id).FirstOrDefault();
+                return View(socio);
+
             }
+            return RedirectToAction("Index");
         }
-
-        // GET: SocioController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
+    
         // POST: SocioController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+       
+        public IActionResult Desactivar(string id)
         {
+            if (string.IsNullOrEmpty(id))
+                return RedirectToAction("Index");
+            Socio socio = _applicationDbContext.Socios.Where(q => q.Cedula == id).FirstOrDefault();
             try
             {
-                return RedirectToAction(nameof(Index));
+                socio.Estado = 0;
+                _applicationDbContext.Update(socio);
+                _applicationDbContext.SaveChanges();
             }
-            catch
+            catch (Exception exc)
             {
-                return View();
+                Console.Error.WriteLine(exc.Message);
+                return RedirectToAction("Index");
+
             }
+
+
+            return RedirectToAction("Index");
+
+        }
+       
+        public IActionResult Activar(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return RedirectToAction("Index");
+            Socio socio = _applicationDbContext.Socios.Where(q => q.Cedula == id).FirstOrDefault();
+            try
+            {
+                socio.Estado = 1;
+                _applicationDbContext.Update(socio);
+                _applicationDbContext.SaveChanges();
+            }
+            catch (Exception exc)
+            {
+                Console.Error.WriteLine(exc.Message);
+                return RedirectToAction("Index");
+
+            }
+
+
+            return RedirectToAction("Index");
+
         }
     }
 }
